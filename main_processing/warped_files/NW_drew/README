@@ -1,0 +1,13 @@
+The following directions are only needed if you want to recreate the warped files yourself (provided here).
+
+20180627.tif generated from running MintPy's save_gdal.py script within ../../mintpy2018_v9_NW_drew_water/inputs:
+
+save_gdal.py ifgramStack.h5 -d coherence-20180603_20180627 -o 20180627.tif
+
+The date doesn't necessarily matter, as we use the following to get the well-known text file.
+
+gdalsrsinfo -o wkt 20180627.tif > target_NW_drew.wkt
+
+This then gets used in sentinel1_reproject_to_unw.py:
+
+python sentinel1_reproject_to_unw.py ../slist target_NW_drew.wkt 20180627.tif
