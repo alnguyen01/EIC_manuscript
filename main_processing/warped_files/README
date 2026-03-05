@@ -1,0 +1,3 @@
+If you want to use the sentinel1_reproject_to_unw.py within ./NW_drew/, you will need the relevant files (Whitcomb et al. ALT maps, Yi & Kimball et al.,
+                                                                                                          ALT maps, and the Sentinel-1 incidence angle map).
+To download these files, please follow to this link (insert link to data repository).
