@@ -1329,30 +1329,33 @@ disp("In situ EIC plotting section complete!")
 
 %% mean r-squared stats
 
-processed_ALT(isnan(ReSALT_ALT))=[];
-insitu_uncert_ALT(isnan(ReSALT_ALT));
-ReSALT_ALT(isnan(ReSALT_ALT))=[]; %remove nan from masked out cores
+if exist('ReSALT_ALT','var')
+    processed_ALT(isnan(ReSALT_ALT))=[];
+    insitu_uncert_ALT(isnan(ReSALT_ALT));
+    ReSALT_ALT(isnan(ReSALT_ALT))=[]; %remove nan from masked out cores
 
-processed_EIC(isnan(ReSALT_EIC))=[];
-insitu_uncert_EIC(isnan(ReSALT_EIC))=[];
-ReSALT_EIC(isnan(ReSALT_EIC))=[]; %remove nan from masked out cores
+    r_squared_ALT = ((ReSALT_ALT - processed_ALT)/(insitu_uncert_ALT)).^2;
+    mean_r_squared_ALT = mean(r_squared_ALT,'omitnan');
 
-r_squared_ALT = ((ReSALT_ALT - processed_ALT)/(insitu_uncert_ALT)).^2;
-mean_r_squared_ALT = mean(r_squared_ALT,'omitnan');
+    disp(strcat('Average in situ ALT is: ',num2str(mean(processed_ALT)),' cm'))
+    disp(strcat('Average ReSALT is: ', num2str(mean(ReSALT_ALT)),' cm'))
+    disp(strcat('Number of pixels is: ', num2str(size(ReSALT_ALT,1))))
+    disp(strcat('Average r-squared is: ', num2str(mean_r_squared_ALT(1,1))))
+end
 
-r_squared_EIC = ((ReSALT_EIC - processed_EIC)/(insitu_uncert_EIC)).^2;
-mean_r_squared_EIC = mean(r_squared_EIC,'omitnan');
+if exist('ReSALT_EIC','var')
+    processed_EIC(isnan(ReSALT_EIC))=[];
+    insitu_uncert_EIC(isnan(ReSALT_EIC))=[];
+    ReSALT_EIC(isnan(ReSALT_EIC))=[]; %remove nan from masked out cores
 
-%print table stats
-disp(strcat('Average in situ ALT is: ',num2str(mean(processed_ALT)),' cm'))
-disp(strcat('Average ReSALT is: ', num2str(mean(ReSALT_ALT)),' cm'))
-disp(strcat('Number of pixels is: ', num2str(size(ReSALT_ALT,1))))
-disp(strcat('Average r-squared is: ', num2str(mean_r_squared_ALT(1,1))))
+    r_squared_EIC = ((ReSALT_EIC - processed_EIC)/(insitu_uncert_EIC)).^2;
+    mean_r_squared_EIC = mean(r_squared_EIC,'omitnan');
 
-disp(strcat('Average in situ EIC is: ',num2str(mean(processed_EIC)),'%'))
-disp(strcat('Average EIC is: ', num2str(mean(ReSALT_EIC)),'%'))
-disp(strcat('Number of pixels is: ', num2str(size(ReSALT_EIC,1))))
-disp(strcat('Average r-squared is: ', num2str(mean_r_squared_EIC(1,1))))
+    disp(strcat('Average in situ EIC is: ',num2str(mean(processed_EIC)),'%'))
+    disp(strcat('Average EIC is: ', num2str(mean(ReSALT_EIC)),'%'))
+    disp(strcat('Number of pixels is: ', num2str(size(ReSALT_EIC,1))))
+    disp(strcat('Average r-squared is: ', num2str(mean_r_squared_EIC(1,1))))
+end
 
 %% output geotiffs
 outputvars_tiff = {'E','E_uncertainty','ALT','ALT_uncertainty','E_ABoVE','E_ABoVE_uncertainty',...

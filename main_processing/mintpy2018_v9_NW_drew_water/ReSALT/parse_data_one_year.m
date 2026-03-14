@@ -726,10 +726,43 @@ error_EIC_pt1 = sqrt((err_deform.^2) + (joint_error_defo.^2));
 error_EICpt2 = (Percent_GIC./100).*sqrt(((error_EIC_pt1./Delta_deform).^2)+((err_ALT_cm./ABoVE_ALT).^2));
 error_EIC = (error_EICpt2.*100);
 
-%% FIGURES BELOW
-%% E & ALT fig
 ref_alt_nan = ref_alt;
 ref_alt_nan(ref_alt==0) = NaN;
+
+%% stats
+test_stats_matrix = cat(3, E', RMSE', ref_alt_nan, joint_error, Delta_deform, error_EIC_pt1,...
+    Percent_GIC, error_EIC);
+
+percent5mat = zeros(size(test_stats_matrix,3),1);
+percent95mat = zeros(size(test_stats_matrix,3),1);
+avgmat = zeros(size(test_stats_matrix,3),1);
+
+for i = 1:size(test_stats_matrix,3)
+    stats_array = squeeze(test_stats_matrix(:,:,i));
+    row_stats_array = (stats_array(:));
+    percent5mat(i,1) = prctile(row_stats_array,5);
+    percent95mat(i,1) = prctile(row_stats_array,95);
+    avgmat(i,1) = mean(row_stats_array,1,'omitnan');
+end
+
+E_stats = {strcat(num2str(round(percent5mat(1,1),2)),' - ',num2str(round(percent95mat(1,1),2)),' +/- ',...
+    num2str(round(percent5mat(2,1),2)),' - ',num2str(round(percent95mat(2,1),2))) , strcat(round(num2str(avgmat(1,1),2)),...
+    ' +/- ',num2str(round(avgmat(2,1),2)))};
+ALT_stats = {strcat(num2str(round(percent5mat(3,1),2)),' - ',num2str(round(percent95mat(3,1),2)),' +/- ',...
+    num2str(round(percent5mat(4,1),2)),' - ',num2str(round(percent95mat(4,1),2))) , strcat(round(num2str(avgmat(3,1),2)),...
+    ' +/- ',num2str(round(avgmat(4,1),2)))};
+EIC_thick_stats = {strcat(num2str(round(percent5mat(5,1),2)),' - ',num2str(round(percent95mat(5,1),2)),' +/- ',...
+    num2str(round(percent5mat(6,1),2)),' - ',num2str(round(percent95mat(6,1),2))) , strcat(round(num2str(avgmat(5,1),2)),...
+    ' +/- ',num2str(round(avgmat(6,1),2)))};
+Percent_EIC_stats = {strcat(num2str(round(percent5mat(7,1),2)),' - ',num2str(round(percent95mat(7,1),2)),' +/- ',...
+    num2str(round(percent5mat(8,1),2)),' - ',num2str(round(percent95mat(8,1),2))) , strcat(round(num2str(avgmat(7,1),2)),...
+    ' +/- ',num2str(round(avgmat(8,1),2)))};
+
+stats_table = table(E_stats, ALT_stats, EIC_thick_stats, Percent_EIC_stats);
+
+%% FIGURES BELOW
+%% E & ALT fig
+
 figure
 tiledlayout(2,2)
 nexttile
@@ -1013,6 +1046,9 @@ if isfile(ALT_core_string)
         tblnames = ["ALT_cm","PixelX","PixelY","Uncert_cm"];
         combined_core_table = table(average_tbl,str2double(splitstring(:,1)),str2double(splitstring(:,2)),stdev_tbl,'VariableNames',tblnames);
     
+        processed_ALT = combined_core_table.ALT_cm;
+        insitu_uncert_ALT = combined_core_table.Uncert_cm;
+        
         PixelX_ALT_avg =combined_core_table(:,2);
         PixelY_ALT_avg = combined_core_table(:,3);
 
@@ -1031,6 +1067,9 @@ if isfile(ALT_core_string)
         tblnames = ["ALT_cm","PixelX","PixelY","Uncert_cm"];
         combined_core_table = table(insitu_ALT,pixelX_ALT,pixelY_ALT,stdev_tbl,'VariableNames',tblnames);
     
+        processed_ALT = combined_core_table.ALT_cm;
+        insitu_uncert_ALT = combined_core_table.Uncert_cm;
+
         ReSALT_ALT = zeros(size(combined_core_table,1),1);
         Error_ALT = zeros(size(combined_core_table,1),1);
 
@@ -1110,6 +1149,9 @@ if isfile(ALT_probe_string)
         combined_probe_table = table(average_probe_tbl,str2double(splitstring(:,1)),str2double(splitstring(:,2)),stdev_tbl,'VariableNames',tblnames);
     end
 
+    processed_ALT = combined_probe_table.ALT_cm;
+    insitu_uncert_ALT = combined_probe_table.Uncert_cm;
+
     PixelX_ALT_avg =combined_probe_table(:,2);
     PixelY_ALT_avg = combined_probe_table(:,3);
 
@@ -1153,6 +1195,9 @@ if isfile(ALT_core_string) %check if both core and probe data exists; if so, com
         disp("Probe data also exists. Combine tables.")
         full_ALT_table = [combined_core_table;combined_probe_table];
         
+        processed_ALT = full_ALT_table.ALT_cm;
+        insitu_uncert_ALT = full_ALT_table.Uncert_cm;
+
         PixelX_ALT_com = full_ALT_table(:,2);
         PixelY_ALT_com = full_ALT_table(:,3);
         
@@ -1245,6 +1290,9 @@ if isfile(EIC_core_string)
         combined_EIC_core_table = table(insitu_EIC,pixelX_EIC,pixelY_EIC,stdev_tbl,'VariableNames',tblnames);
     end
 
+    processed_EIC = combined_EIC_core_table.("EIC_%");
+    insitu_uncert_EIC = combined_EIC_core_table.("Uncert_%");
+
     PixelX_EIC = combined_EIC_core_table.PixelX;
     PixelY_EIC = combined_EIC_core_table.PixelY;
     
@@ -1278,6 +1326,37 @@ else
     disp("There is no EIC core data for this year.")
 end
 disp("In situ EIC plotting section complete!")
+
+%% mean r-squared stats
+
+if exist('ReSALT_ALT','var')
+    processed_ALT(isnan(ReSALT_ALT))=[];
+    insitu_uncert_ALT(isnan(ReSALT_ALT));
+    ReSALT_ALT(isnan(ReSALT_ALT))=[]; %remove nan from masked out cores
+
+    r_squared_ALT = ((ReSALT_ALT - processed_ALT)/(insitu_uncert_ALT)).^2;
+    mean_r_squared_ALT = mean(r_squared_ALT,'omitnan');
+
+    disp(strcat('Average in situ ALT is: ',num2str(mean(processed_ALT)),' cm'))
+    disp(strcat('Average ReSALT is: ', num2str(mean(ReSALT_ALT)),' cm'))
+    disp(strcat('Number of pixels is: ', num2str(size(ReSALT_ALT,1))))
+    disp(strcat('Average r-squared is: ', num2str(mean_r_squared_ALT(1,1))))
+end
+
+if exist('ReSALT_EIC','var')
+    processed_EIC(isnan(ReSALT_EIC))=[];
+    insitu_uncert_EIC(isnan(ReSALT_EIC))=[];
+    ReSALT_EIC(isnan(ReSALT_EIC))=[]; %remove nan from masked out cores
+
+    r_squared_EIC = ((ReSALT_EIC - processed_EIC)/(insitu_uncert_EIC)).^2;
+    mean_r_squared_EIC = mean(r_squared_EIC,'omitnan');
+
+    disp(strcat('Average in situ EIC is: ',num2str(mean(processed_EIC)),'%'))
+    disp(strcat('Average EIC is: ', num2str(mean(ReSALT_EIC)),'%'))
+    disp(strcat('Number of pixels is: ', num2str(size(ReSALT_EIC,1))))
+    disp(strcat('Average r-squared is: ', num2str(mean_r_squared_EIC(1,1))))
+end
+
 %% output geotiffs
 outputvars_tiff = {'E','E_uncertainty','ALT','ALT_uncertainty','E_ABoVE','E_ABoVE_uncertainty',...
     'EIC_thickness','EIC_thickness_uncertainty','EIC_percent','EIC_percent_uncertainty','RMSE_extrap', 'Coherence'};
