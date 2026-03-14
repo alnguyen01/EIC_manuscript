@@ -726,10 +726,43 @@ error_EIC_pt1 = sqrt((err_deform.^2) + (joint_error_defo.^2));
 error_EICpt2 = (Percent_GIC./100).*sqrt(((error_EIC_pt1./Delta_deform).^2)+((err_ALT_cm./ABoVE_ALT).^2));
 error_EIC = (error_EICpt2.*100);
 
-%% FIGURES BELOW
-%% E & ALT fig
 ref_alt_nan = ref_alt;
 ref_alt_nan(ref_alt==0) = NaN;
+
+%% stats
+test_stats_matrix = cat(3, E', RMSE', ref_alt_nan, joint_error, Delta_deform, error_EIC_pt1,...
+    Percent_GIC, error_EIC);
+
+percent5mat = zeros(size(test_stats_matrix,3),1);
+percent95mat = zeros(size(test_stats_matrix,3),1);
+avgmat = zeros(size(test_stats_matrix,3),1);
+
+for i = 1:size(test_stats_matrix,3)
+    stats_array = squeeze(test_stats_matrix(:,:,i));
+    row_stats_array = (stats_array(:));
+    percent5mat(i,1) = prctile(row_stats_array,5);
+    percent95mat(i,1) = prctile(row_stats_array,95);
+    avgmat(i,1) = mean(row_stats_array,1,'omitnan');
+end
+
+E_stats = {strcat(num2str(round(percent5mat(1,1),2)),' - ',num2str(round(percent95mat(1,1),2)),' +/- ',...
+    num2str(round(percent5mat(2,1),2)),' - ',num2str(round(percent95mat(2,1),2))) , strcat(round(num2str(avgmat(1,1),2)),...
+    ' +/- ',num2str(round(avgmat(2,1),2)))};
+ALT_stats = {strcat(num2str(round(percent5mat(3,1),2)),' - ',num2str(round(percent95mat(3,1),2)),' +/- ',...
+    num2str(round(percent5mat(4,1),2)),' - ',num2str(round(percent95mat(4,1),2))) , strcat(round(num2str(avgmat(3,1),2)),...
+    ' +/- ',num2str(round(avgmat(4,1),2)))};
+EIC_thick_stats = {strcat(num2str(round(percent5mat(5,1),2)),' - ',num2str(round(percent95mat(5,1),2)),' +/- ',...
+    num2str(round(percent5mat(6,1),2)),' - ',num2str(round(percent95mat(6,1),2))) , strcat(round(num2str(avgmat(5,1),2)),...
+    ' +/- ',num2str(round(avgmat(6,1),2)))};
+Percent_EIC_stats = {strcat(num2str(round(percent5mat(7,1),2)),' - ',num2str(round(percent95mat(7,1),2)),' +/- ',...
+    num2str(round(percent5mat(8,1),2)),' - ',num2str(round(percent95mat(8,1),2))) , strcat(round(num2str(avgmat(7,1),2)),...
+    ' +/- ',num2str(round(avgmat(8,1),2)))};
+
+stats_table = table(E_stats, ALT_stats, EIC_thick_stats, Percent_EIC_stats);
+
+%% FIGURES BELOW
+%% E & ALT fig
+
 figure
 tiledlayout(2,2)
 nexttile
@@ -968,151 +1001,21 @@ percent5 = prctile(row_stats_array,5); %colorbar lims
 percent95 = prctile(row_stats_array,95);
 clim([percent5 percent95])
 
-%% EIC 1-to-1
-EIC_core_string = strcat("../../warped_files/NW_drew/EIC_cores_",num2str(year),".xls");
-if isfile(EIC_core_string)
-    disp('File exits. Continue to output EIC 1-to-1.')
- 
-    EIC_cores = readtable(EIC_core_string,'VariableNamingRule','preserve'); %read in table of pixels of interest
-    longitude = EIC_cores.Longitude;
-    latitude = EIC_cores.Latitude;
-    entries = length(longitude);
-    names = EIC_cores.Borehole;
-    insitu_EIC = EIC_cores.EIC____;
+%% ALT cores and probes
 
-    insitu_EIC_uncert = zeros(entries,1);
-    insitu_EIC_uncert(:,1) = std(insitu_EIC,1);
-
-    pixelX_EIC = zeros(entries,1);
-    pixelY_EIC = zeros(entries,1);
-
-    for i = 1:entries
-        pixelX_EIC(i,1) = ceil(abs((xfirst+(-longitude(i,1)))/xstep));
-        pixelY_EIC(i,1) = ceil(abs((yfirst-latitude(i,1))/ystep));
-    end
-    
-    %Look for cores within the same pixel
-    EIC_radar_coords = [pixelX_EIC,pixelY_EIC];
-    EIC_radar_coords = strcat(num2str(EIC_radar_coords(:,1)),",",num2str(EIC_radar_coords(:,2)));
-    [uniqueStrings, ~, indices] = unique(EIC_radar_coords);
-    counts = histcounts(indices, 1:length(uniqueStrings)+1);
-    duplicateStrings = uniqueStrings(counts>1);
-    if size(duplicateStrings)>0
-        disp('Multiple EIC cores in the same pixel. Spatially average.')
-        
-        duplicateindex = find(EIC_radar_coords==duplicateStrings); %only for one duplicate
-        
-        %add spatial averaging representation and measurement uncertainty
-        %in quadrature for necessary cores
-        insitu_EIC_uncert(entries+1) = sqrt((std(insitu_EIC(duplicateindex),1)^2)+(insitu_EIC_uncert(1)^2));
-        insitu_EIC_uncert(duplicateindex) =[];
-
-        insitu_EIC(entries+1) = mean(insitu_EIC(duplicateindex));
-        insitu_EIC(duplicateindex) =[];
-
-        combinedname = strcat(names(duplicateindex(1)),"-",names(duplicateindex(2)),"AVG");
-        names{entries+1} = combinedname;
-        names(duplicateindex) =[];
-
-        pixelX_EIC(entries+1) = mean(pixelX_EIC(duplicateindex));
-        pixelY_EIC(entries+1) = mean(pixelY_EIC(duplicateindex));
-
-        pixelX_EIC(duplicateindex) =[];
-        pixelY_EIC(duplicateindex) =[];
-        entries = length(insitu_EIC);
-    else
-        disp('No cores within the same pixel. Continue.')
-    end
-
-    ReSALT_EIC = zeros(entries,1);
-    Error_EIC = zeros(entries,1);
-
-    for i = 1:entries
-        ReSALT_EIC(i,1) = Percent_GIC(pixelY_EIC(i,1),pixelX_EIC(i,1));
-        Error_EIC(i,1) = error_EIC(pixelY_EIC(i,1),pixelX_EIC(i,1));
-    end
-
-    figure
-    tiledlayout(1,2)
-    nexttile
-    h=imagesc(Percent_GIC_mask);
-    set(gca,'color',0.5*[1 1 1]);
-    set(h, 'AlphaData', ~isnan(Percent_GIC_mask))
-    axis on
-    hold on
-    for i = 1:entries
-        h = plot(pixelX_EIC(i),pixelY_EIC(i),'rx','Linewidth', 2,'MarkerSize',10);
-        text(pixelX_EIC(i)+15,pixelY_EIC(i)+15,names(i),'Color','r')
-    end
-    title(['%EIC in the Active Layer in ', num2str(year)])
-    colorbar
-    stats_array = squeeze(Percent_GIC_mask);
-    row_stats_array = (stats_array(:));
-    percent5 = prctile(row_stats_array,5); %colorbar lims
-    percent95 = prctile(row_stats_array,95);
-    clim([percent5 percent95])
-
-    nexttile
-    scatter(insitu_EIC,ReSALT_EIC,'filled')
-    hold on
-    for i = 1:entries
-        text(insitu_EIC(i),ReSALT_EIC(i),names(i),'Color','r')
-    end
-    xlabel('In situ EIC [%]')
-    ylabel('InSAR-derived EIC [%]')
-
-    lim = max(max(insitu_EIC),max(ReSALT_EIC));
-    xlim([0,round((lim+10)/5)*5])
-    ylim([0,round((lim+10)/5)*5])
-    plot(xlim,ylim,'--r')
-
-    f = errorbar(insitu_EIC,ReSALT_EIC,Error_EIC,'vertical','Linestyle','none');
-    f.Color = 'k';
-    e = errorbar(insitu_EIC,ReSALT_EIC,insitu_EIC_uncert,'horizontal','linestyle','none');
-    e.Color = 'k';
-
-    legend('EIC','Idealized 1-to-1 fit')
-else
-    disp('File does not exist. No EIC during this year. Stop here')
-end
-%% agu plot EIC
-figure
-scatter(insitu_EIC,ReSALT_EIC,'filled')
-hold on
-% for i = 1:entries
-%     text(insitu_EIC(i),ReSALT_EIC(i),names(i),'Color','r')
-% end
-xlabel('In situ EIC [%]')
-ylabel('InSAR-derived EIC [%]')
-
-lim = max(max(insitu_EIC),max(ReSALT_EIC));
-xlim([0,round((lim+10)/5)*5])
-ylim([0,round((lim+10)/5)*5])
-plot(xlim,ylim,'--r')
-
-f = errorbar(insitu_EIC,ReSALT_EIC,Error_EIC,'vertical','Linestyle','none');
-f.Color = 'k';
-e = errorbar(insitu_EIC,ReSALT_EIC,insitu_EIC_uncert,'horizontal','linestyle','none');
-e.Color = 'k';
-
-legend('EIC','Idealized 1-to-1 fit')
-ax = gca;
-ax.FontSize = 20;
-
-%% agu plot ALT
 ALT_core_string = strcat("../../warped_files/NW_drew/ALT_cores_",num2str(year),".xls");
 if isfile(ALT_core_string)
-    disp('File exits. Continue to output ALT 1-to-1.')
- 
+    disp('Core file exits. Continue to output ALT 1-to-1.')
+
     ALT_cores = readtable(ALT_core_string,'VariableNamingRule','preserve'); %read in table of pixels of interest
     longitude = ALT_cores.Longitude;
     latitude = ALT_cores.Latitude;
     entries_ALT = length(longitude);
-    names_ALT = ALT_cores.Borehole;
-    insitu_ALT = ALT_cores.ALT__cm_;
+    %names_ALT = ALT_cores.Borehole;
+    
+    insitu_ALT = ALT_cores.("ALT (cm)");
 
-    insitu_ALT_uncert = zeros(entries_ALT,1);
-    insitu_ALT_uncert(:,1) = std(insitu_ALT,1);
+    insitu_ALT(isnan(insitu_ALT)) = [];
 
     pixelX_ALT = zeros(entries_ALT,1);
     pixelY_ALT = zeros(entries_ALT,1);
@@ -1125,114 +1028,332 @@ if isfile(ALT_core_string)
     %Look for cores within the same pixel
     ALT_radar_coords = [pixelX_ALT,pixelY_ALT];
     ALT_radar_coords = strcat(num2str(ALT_radar_coords(:,1)),",",num2str(ALT_radar_coords(:,2)));
+
     [uniqueStrings_ALT, ~, indices_ALT] = unique(ALT_radar_coords);
+
     counts_ALT = histcounts(indices_ALT, 1:length(uniqueStrings_ALT)+1);
     duplicateStrings_ALT = uniqueStrings_ALT(counts_ALT>1);
+
     if size(duplicateStrings_ALT)>0
-        disp('Skipping Spatial averaging for now.')
-%         disp('Multiple ALT cores in the same pixel. Spatially average.')
-%         
-%         duplicateindex_ALT = find(ALT_radar_coords==duplicateStrings_ALT); %only for one duplicate
-%         
-%         %add spatial averaging representation and measurement uncertainty
-%         %in quadrature for necessary cores
-%         insitu_ALT_uncert(entries_ALT+1) = sqrt((std(insitu_ALT(duplicateindex_ALT),1)^2)+(insitu_ALT_uncert(1)^2));
-%         insitu_ALT_uncert(duplicateindex_ALT) =[];
-% 
-%         insitu_ALT(entries_ALT+1) = mean(insitu_ALT(duplicateindex_ALT));
-%         insitu_ALT(duplicateindex_ALT) =[];
-% 
-%         combinedname_ALT = strcat(names_ALT(duplicateindex_ALT(1)),"-",names_ALT(duplicateindex_ALT(2)),"AVG");
-%         names_ALT{entries_ALT+1} = combinedname_ALT;
-%         names_ALT(duplicateindex_ALT) =[];
-% 
-%         pixelX_ALT(entries_ALT+1) = mean(pixelX_ALT(duplicateindex_ALT));
-%         pixelY_ALT(entries_ALT+1) = mean(pixelY_ALT(duplicateindex_ALT));
-% 
-%         pixelX_ALT(duplicateindex_ALT) =[];
-%         pixelY_ALT(duplicateindex_ALT) =[];
-%         entries_ALT = length(insitu_ALT);
+        disp('Multiple ALT cores in the same pixel. Spatially average.')
+        insitu_tbl = table(insitu_ALT,indices_ALT);
+        insitu_tbl = sortrows(insitu_tbl,"indices_ALT","ascend");
+        average_tbl = splitapply(@mean,insitu_tbl(:,"insitu_ALT"),findgroups(insitu_tbl(:,"indices_ALT")));
+        stdev_tbl = splitapply(@std,insitu_tbl(:,"insitu_ALT"),findgroups(insitu_tbl(:,"indices_ALT")));
+        stdev_tbl = sqrt((stdev_tbl.^2)+(5^2)); %spatial avg std + measurement uncertainty in quadrature
+
+        splitstring = split(uniqueStrings_ALT,",");
+        tblnames = ["ALT_cm","PixelX","PixelY","Uncert_cm"];
+        combined_core_table = table(average_tbl,str2double(splitstring(:,1)),str2double(splitstring(:,2)),stdev_tbl,'VariableNames',tblnames);
+    
+        processed_ALT = combined_core_table.ALT_cm;
+        insitu_uncert_ALT = combined_core_table.Uncert_cm;
+        
+        PixelX_ALT_avg =combined_core_table(:,2);
+        PixelY_ALT_avg = combined_core_table(:,3);
+
+        ReSALT_ALT = zeros(size(combined_core_table,1),1);
+        Error_ALT = zeros(size(combined_core_table,1),1);
+
+        for i = 1:size(combined_core_table,1)
+            ReSALT_ALT(i,1) = ref_alt_nan(PixelY_ALT_avg(i,1),PixelX_ALT_avg(i,1));
+            Error_ALT(i,1)= joint_error(PixelY_ALT_avg(i,1),PixelX_ALT_avg(i,1));
+        end    
+    
     else
-        disp('No cores within the same pixel. Continue.')
-    end
+        disp('No ALT cores in the same pixel, so do not spatially average cores.')
+        stdev_tbl = zeros(entries_ALT,1);
+        stdev_tbl(:) = sqrt((5^2)); %just measurement uncertainty; should be for some years w/ only cores
+        tblnames = ["ALT_cm","PixelX","PixelY","Uncert_cm"];
+        combined_core_table = table(insitu_ALT,pixelX_ALT,pixelY_ALT,stdev_tbl,'VariableNames',tblnames);
+    
+        processed_ALT = combined_core_table.ALT_cm;
+        insitu_uncert_ALT = combined_core_table.Uncert_cm;
 
-    ReSALT_ALT = zeros(entries_ALT,1);
-    Error_ALT = zeros(entries_ALT,1);
+        ReSALT_ALT = zeros(size(combined_core_table,1),1);
+        Error_ALT = zeros(size(combined_core_table,1),1);
 
-    for i = 1:entries_ALT
-        ReSALT_ALT(i,1) = ref_alt_nan(pixelY_ALT(i,1),pixelX_ALT(i,1));
-        Error_ALT(i,1)= joint_error(pixelY_ALT(i,1),pixelX_ALT(i,1));
+        for i = 1:size(combined_core_table,1)
+            ReSALT_ALT(i,1) = ref_alt_nan(pixelY_ALT(i,1),pixelX_ALT(i,1));
+            Error_ALT(i,1)= joint_error(pixelY_ALT(i,1),pixelX_ALT(i,1));
+        end 
     end
 
     figure
-    tiledlayout(1,2)
-    nexttile
-    h=imagesc(ref_alt_nan);
-    set(gca,'color',0.5*[1 1 1]);
-    set(h, 'AlphaData', ~isnan(ref_alt_nan))
-    axis on
+    scatter(combined_core_table.ALT_cm,ReSALT_ALT,'filled')
     hold on
-    for i = 1:entries_ALT
-        h = plot(pixelX_ALT(i),pixelY_ALT(i),'rx','Linewidth', 2,'MarkerSize',10);
-        text(pixelX_ALT(i)+15,pixelY_ALT(i)+15,names_ALT(i),'Color','r')
-    end
-    title(['Active Layer Thickness in ', num2str(year)])
-    colorbar
-    stats_array = squeeze(ref_alt_nan);
-    row_stats_array = (stats_array(:));
-    percent5 = prctile(row_stats_array,5); %colorbar lims
-    percent95 = prctile(row_stats_array,95);
-    clim([percent5 percent95])
 
-    nexttile
-    scatter(insitu_ALT,ReSALT_ALT,'filled')
-    hold on
-    for i = 1:entries_ALT
-        text(insitu_ALT(i),ReSALT_ALT(i),names_ALT(i),'Color','r')
-    end
     xlabel('In situ ALT [cm]')
     ylabel('InSAR-derived ALT [cm]')
 
-    lim = max(max(insitu_ALT),max(ReSALT_ALT));
+    lim = max(max(combined_core_table.ALT_cm),max(ReSALT_ALT));
+    lim = round((lim + max(Error_ALT) + 10)/5)*5;
+    xlim([0, lim])
+    ylim([0, lim])
+    plot([0 xlim],[0 ylim],'--r')
+
+    f = errorbar(combined_core_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
+    f.Color = 'k';
+    e = errorbar(combined_core_table.ALT_cm,ReSALT_ALT,combined_core_table.Uncert_cm,'horizontal','linestyle','none');
+    e.Color = 'k';
+
+    legend('ALT','Idealized 1-to-1 fit')
+    ax = gca;
+    ax.FontSize = 20;
+
+else
+    disp("There is no ALT core data for this year.")
+end
+
+ALT_probe_string = strcat("ALT_probes_",num2str(year),".xls");
+if isfile(ALT_probe_string)
+    disp('Probe file exits. Continue to output ALT 1-to-1.')
+
+    ALT_probes = readtable(ALT_probe_string,'VariableNamingRule','preserve'); %read in table of pixels of interest
+    longitude = ALT_probes.Longitude;
+    latitude = ALT_probes.Latitude;
+    entries_ALT = length(longitude);
+    %names_ALT = ALT_cores.Borehole;
+    
+    insitu_ALT = ALT_probes.("ALT (cm)");
+
+    insitu_ALT(isnan(insitu_ALT)) = [];
+
+    pixelX_ALT = zeros(entries_ALT,1);
+    pixelY_ALT = zeros(entries_ALT,1);
+
+    for i = 1:entries_ALT
+        pixelX_ALT(i,1) = ceil(abs((xfirst+(-longitude(i,1)))/xstep));
+        pixelY_ALT(i,1) = ceil(abs((yfirst-latitude(i,1))/ystep));
+    end
+    
+    %Look for cores within the same pixel
+    ALT_radar_coords = [pixelX_ALT,pixelY_ALT];
+    ALT_radar_coords = strcat(num2str(ALT_radar_coords(:,1)),",",num2str(ALT_radar_coords(:,2)));
+
+    [uniqueStrings_ALT, ~, indices_ALT] = unique(ALT_radar_coords);
+
+    counts_ALT = histcounts(indices_ALT, 1:length(uniqueStrings_ALT)+1);
+    duplicateStrings_ALT = uniqueStrings_ALT(counts_ALT>1);
+
+    if size(duplicateStrings_ALT)>0
+        disp('Multiple ALT probes in the same pixel. Spatially average.')
+        insitu_tbl = table(insitu_ALT,indices_ALT);
+        insitu_tbl = sortrows(insitu_tbl,"indices_ALT","ascend");
+        average_probe_tbl = splitapply(@mean,insitu_tbl(:,"insitu_ALT"),findgroups(insitu_tbl(:,"indices_ALT")));
+        stdev_tbl = splitapply(@std,insitu_tbl(:,"insitu_ALT"),findgroups(insitu_tbl(:,"indices_ALT")));
+        stdev_tbl = sqrt((stdev_tbl.^2)+(3^2)); %spatial avg std + measurement uncertainty in quadrature
+
+        splitstring = split(uniqueStrings_ALT,",");
+        tblnames = ["ALT_cm","PixelX","PixelY","Uncert_cm"];
+        combined_probe_table = table(average_probe_tbl,str2double(splitstring(:,1)),str2double(splitstring(:,2)),stdev_tbl,'VariableNames',tblnames);
+    end
+
+    processed_ALT = combined_probe_table.ALT_cm;
+    insitu_uncert_ALT = combined_probe_table.Uncert_cm;
+
+    PixelX_ALT_avg =combined_probe_table(:,2);
+    PixelY_ALT_avg = combined_probe_table(:,3);
+
+    ReSALT_ALT = zeros(size(combined_probe_table,1),1);
+    Error_ALT = zeros(size(combined_probe_table,1),1);
+
+    for i = 1:size(combined_probe_table,1)
+        ReSALT_ALT(i,1) = ref_alt_nan(PixelY_ALT_avg(i,1),PixelX_ALT_avg(i,1));
+        Error_ALT(i,1)= joint_error(PixelY_ALT_avg(i,1),PixelX_ALT_avg(i,1));
+    end
+
+    figure
+    scatter(combined_probe_table.ALT_cm,ReSALT_ALT,'filled')
+    hold on
+
+    xlabel('In situ ALT [cm]')
+    ylabel('InSAR-derived ALT [cm]')
+
+    lim = max(max(combined_probe_table.ATL_cm),max(ReSALT_ALT));
+    lim = round((lim + max(Error_ALT) + 10)/5)*5;
+    xlim([0, lim])
+    ylim([0, lim])
+    plot([0 xlim],[0 ylim],'--r')
+
+    f = errorbar(combined_probe_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
+    f.Color = 'k';
+    e = errorbar(combined_probe_table.ALT_cm,ReSALT_ALT,combined_probe_table.Uncert_cm,'horizontal','linestyle','none');
+    e.Color = 'k';
+
+    legend('ALT','Idealized 1-to-1 fit')
+    ax = gca;
+    ax.FontSize = 20;
+
+else
+    disp("There is no probe data for this year.")
+end
+
+if isfile(ALT_core_string) %check if both core and probe data exists; if so, combine
+    disp("Core data exits.")
+    if isfile(ALT_probe_string)
+        disp("Probe data also exists. Combine tables.")
+        full_ALT_table = [combined_core_table;combined_probe_table];
+        
+        processed_ALT = full_ALT_table.ALT_cm;
+        insitu_uncert_ALT = full_ALT_table.Uncert_cm;
+
+        PixelX_ALT_com = full_ALT_table(:,2);
+        PixelY_ALT_com = full_ALT_table(:,3);
+        
+        ReSALT_ALT = zeros(size(full_ALT_table,1),1);
+        Error_ALT = zeros(size(full_ALT_table,1),1);
+
+        for i = 1:size(full_ALT_table,1)
+            ReSALT_ALT(i,1) = ref_alt_nan(PixelY_ALT_com(i,1),PixelX_ALT_com(i,1));
+            Error_ALT(i,1)= joint_error(PixelY_ALT_com(i,1),PixelX_ALT_com(i,1));
+        end
+        
+        figure
+        scatter(full_ALT_table.ALT_cm,ReSALT_ALT,'filled')
+        hold on
+
+        xlabel('In situ ALT [cm]')
+        ylabel('InSAR-derived ALT [cm]')
+
+        lim = max(max(full_ALT_table.ALT_cm),max(ReSALT_ALT));
+        lim = round((lim + max(Error_ALT) + 10)/5)*5;
+        xlim([0, lim])
+        ylim([0, lim])
+        plot([0 xlim],[0 ylim],'--r')
+
+        f = errorbar(full_ALT_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
+        f.Color = 'k';
+        e = errorbar(full_ALT_table.ALT_cm,ReSALT_ALT,full_ALT_table.Uncert_cm,'horizontal','linestyle','none');
+        e.Color = 'k';
+
+        legend('ALT','Idealized 1-to-1 fit')
+        ax = gca;
+        ax.FontSize = 20;
+
+    else
+        disp("Probe data does not exist. Only core data, so no need for combination of tables.")
+    end
+    
+else
+    disp("Core data does not exist, so no need for combination of tables.")
+end
+disp("In situ ALT plotting section complete!")
+
+%% EIC cores
+EIC_core_string = strcat("../../warped_files/NW_drew/EIC_cores_",num2str(year),".xls");
+if isfile(EIC_core_string)
+    disp('EIC file exits. Continue to output EIC 1-to-1.')
+
+    EIC_cores = readtable(EIC_core_string,'VariableNamingRule','preserve'); %read in table of pixels of interest
+    longitude = EIC_cores.Longitude;
+    latitude = EIC_cores.Latitude;
+    entries = length(longitude);
+    %names = EIC_cores.Borehole;
+    
+    insitu_EIC = EIC_cores.EIC____;
+
+    pixelX_EIC = zeros(entries,1);
+    pixelY_EIC = zeros(entries,1);
+
+    for i = 1:entries
+        pixelX_EIC(i,1) = ceil(abs((xfirst+(-longitude(i,1)))/xstep));
+        pixelY_EIC(i,1) = ceil(abs((yfirst-latitude(i,1))/ystep));
+    end
+
+    %Look for cores within the same pixel
+    EIC_radar_coords = [pixelX_EIC,pixelY_EIC];
+    EIC_radar_coords = strcat(num2str(EIC_radar_coords(:,1)),",",num2str(EIC_radar_coords(:,2)));
+
+    [uniqueStrings, ~, indices_EIC] = unique(EIC_radar_coords);
+
+    counts = histcounts(indices_EIC, 1:length(uniqueStrings)+1);
+    duplicateStrings = uniqueStrings(counts>1);
+
+    if size(duplicateStrings)>0
+        disp('Multiple EIC cores in the same pixel. Spatially average.')
+
+        insitu_tbl = table(insitu_EIC,indices_EIC);
+        insitu_tbl = sortrows(insitu_tbl,"indices_EIC","ascend");
+        average_EIC_tbl = splitapply(@mean,insitu_tbl(:,"insitu_EIC"),findgroups(insitu_tbl(:,"indices_EIC")));
+        stdev_tbl = splitapply(@std,insitu_tbl(:,"insitu_EIC"),findgroups(insitu_tbl(:,"indices_EIC")));
+        stdev_tbl = sqrt((stdev_tbl.^2)+(std(insitu_EIC).^2)); %spatial avg std + measurement uncertainty in quadrature
+
+        splitstring = split(uniqueStrings,",");
+        tblnames = ["EIC_%","PixelX","PixelY","Uncert_%"];
+        combined_EIC_core_table = table(average_EIC_tbl,str2double(splitstring(:,1)),str2double(splitstring(:,2)),stdev_tbl,'VariableNames',tblnames);
+    else
+        disp('No EIC cores in the same pixel, so do not spatially average cores.')
+        stdev_tbl = zeros(entries,1);
+        stdev_tbl(:) = sqrt(std(insitu_EIC).^2); %just measurement uncertainty; should be for some years w/ only cores
+        tblnames = ["EIC_%","PixelX","PixelY","Uncert_%"];
+        combined_EIC_core_table = table(insitu_EIC,pixelX_EIC,pixelY_EIC,stdev_tbl,'VariableNames',tblnames);
+    end
+
+    processed_EIC = combined_EIC_core_table.("EIC_%");
+    insitu_uncert_EIC = combined_EIC_core_table.("Uncert_%");
+
+    PixelX_EIC = combined_EIC_core_table.PixelX;
+    PixelY_EIC = combined_EIC_core_table.PixelY;
+    
+    ReSALT_EIC = zeros(entries,1);
+    Error_EIC = zeros(entries,1);
+
+    for i = 1:entries
+        ReSALT_EIC(i,1) = Percent_GIC(PixelY_EIC(i,1),PixelX_EIC(i,1));
+        Error_EIC(i,1) = error_EIC(PixelY_EIC(i,1),PixelX_EIC(i,1));
+    end
+    figure
+    scatter(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,'filled')
+    hold on
+    xlabel('In situ EIC [%]')
+    ylabel('InSAR-derived EIC [%]')
+
+    lim = max(max(insitu_EIC),max(ReSALT_EIC));
     xlim([0,round((lim+10)/5)*5])
     ylim([0,round((lim+10)/5)*5])
     plot(xlim,ylim,'--r')
 
-    f = errorbar(insitu_ALT,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
+    f = errorbar(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,Error_EIC,'vertical','Linestyle','none');
     f.Color = 'k';
-    e = errorbar(insitu_ALT,ReSALT_ALT,insitu_ALT_uncert,'horizontal','linestyle','none');
+    e = errorbar(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,combined_EIC_core_table.("Uncert_%"),'horizontal','linestyle','none');
     e.Color = 'k';
 
-    legend('ALT','Idealized 1-to-1 fit')
+    legend('EIC','Idealized 1-to-1 fit')
+    ax = gca;
+    ax.FontSize = 20;
 else
-    disp('File does not exist. No ALT during this year. Stop here')
+    disp("There is no EIC core data for this year.")
 end
+disp("In situ EIC plotting section complete!")
 
-%% agu ALT 1-to-1
-figure
-scatter(insitu_ALT,ReSALT_ALT,'filled')
-hold on
-%     for i = 1:entries_ALT
-%         text(insitu_ALT(i),ReSALT_EIC(i),names_ALT(i),'Color','r')
-%     end
-xlabel('In situ ALT [cm]')
-ylabel('InSAR-derived ALT [cm]')
+%% mean r-squared stats
 
-lim = max(max(insitu_ALT),max(ReSALT_ALT));
-xlim([0,round((lim+10)/5)*5])
-ylim([0,round((lim+10)/5)*5])
-xlim([0 270])
-ylim([0 270])
-plot([0 270],[0 270],'--r')
+processed_ALT(isnan(ReSALT_ALT))=[];
+insitu_uncert_ALT(isnan(ReSALT_ALT));
+ReSALT_ALT(isnan(ReSALT_ALT))=[]; %remove nan from masked out cores
 
-f = errorbar(insitu_ALT,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
-f.Color = 'k';
-e = errorbar(insitu_ALT,ReSALT_ALT,insitu_ALT_uncert,'horizontal','linestyle','none');
-e.Color = 'k';
+processed_EIC(isnan(ReSALT_EIC))=[];
+insitu_uncert_EIC(isnan(ReSALT_EIC))=[];
+ReSALT_EIC(isnan(ReSALT_EIC))=[]; %remove nan from masked out cores
 
-legend('ALT','Idealized 1-to-1 fit')
-ax = gca;
-ax.FontSize = 20;
+r_squared_ALT = ((ReSALT_ALT - processed_ALT)/(insitu_uncert_ALT)).^2;
+mean_r_squared_ALT = mean(r_squared_ALT,'omitnan');
+
+r_squared_EIC = ((ReSALT_EIC - processed_EIC)/(insitu_uncert_EIC)).^2;
+mean_r_squared_EIC = mean(r_squared_EIC,'omitnan');
+
+%print table stats
+disp(strcat('Average in situ ALT is: ',num2str(mean(processed_ALT)),' cm'))
+disp(strcat('Average ReSALT is: ', num2str(mean(ReSALT_ALT)),' cm'))
+disp(strcat('Number of pixels is: ', num2str(size(ReSALT_ALT,1))))
+disp(strcat('Average r-squared is: ', num2str(mean_r_squared_ALT(1,1))))
+
+disp(strcat('Average in situ EIC is: ',num2str(mean(processed_EIC)),'%'))
+disp(strcat('Average EIC is: ', num2str(mean(ReSALT_EIC)),'%'))
+disp(strcat('Number of pixels is: ', num2str(size(ReSALT_EIC,1))))
+disp(strcat('Average r-squared is: ', num2str(mean_r_squared_EIC(1,1))))
+
 %% output geotiffs
 outputvars_tiff = {'E','E_uncertainty','ALT','ALT_uncertainty','E_ABoVE','E_ABoVE_uncertainty',...
     'EIC_thickness','EIC_thickness_uncertainty','EIC_percent','EIC_percent_uncertainty','RMSE_extrap', 'Coherence'};
