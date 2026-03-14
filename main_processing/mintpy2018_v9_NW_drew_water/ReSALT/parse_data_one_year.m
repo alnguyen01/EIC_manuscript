@@ -1105,7 +1105,7 @@ else
     disp("There is no ALT core data for this year.")
 end
 
-ALT_probe_string = strcat("ALT_probes_",num2str(year),".xls");
+ALT_probe_string = strcat("../../warped_files/NW_drew/ALT_probes_",num2str(year),".xls");
 if isfile(ALT_probe_string)
     disp('Probe file exits. Continue to output ALT 1-to-1.')
 
@@ -1152,8 +1152,8 @@ if isfile(ALT_probe_string)
     processed_ALT = combined_probe_table.ALT_cm;
     insitu_uncert_ALT = combined_probe_table.Uncert_cm;
 
-    PixelX_ALT_avg =combined_probe_table(:,2);
-    PixelY_ALT_avg = combined_probe_table(:,3);
+    PixelX_ALT_avg =table2array(combined_probe_table(:,2));
+    PixelY_ALT_avg = table2array(combined_probe_table(:,3));
 
     ReSALT_ALT = zeros(size(combined_probe_table,1),1);
     Error_ALT = zeros(size(combined_probe_table,1),1);
@@ -1170,7 +1170,7 @@ if isfile(ALT_probe_string)
     xlabel('In situ ALT [cm]')
     ylabel('InSAR-derived ALT [cm]')
 
-    lim = max(max(combined_probe_table.ATL_cm),max(ReSALT_ALT));
+    lim = max(max(combined_probe_table.ALT_cm),max(ReSALT_ALT));
     lim = round((lim + max(Error_ALT) + 10)/5)*5;
     xlim([0, lim])
     ylim([0, lim])
