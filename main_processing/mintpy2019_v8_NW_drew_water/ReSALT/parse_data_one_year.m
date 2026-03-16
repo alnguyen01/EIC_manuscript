@@ -211,35 +211,8 @@ if freezedate > dates_datetime(num_dates)
     set(gca,'FontSize',20)
     set(gcf,'Position',[100 100 1500 1000])
 
-    %AGU ts plot
+    %Manuscript ts plot
     figure
-    tiledlayout(1,2)
-    nexttile
-    for i = 1:entries
-        yyaxis left
-        scatter(dates_datetime,squeeze(ts_thaw(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
-        hold on
-        plot(dates_datetime,squeeze(yfitaddt(pixelX(i),pixelY(i),:)),colors{i},'LineWidth',3)
-        yyaxis right
-        set(gca,'YDir','reverse')
-        plot(dates_datetime_full,addt(dates_full_doy))
-    end
-    title([num2str(year),' Seasonal Thaw Subsidence Original Fit'])
-    xlabel('Date')
-    yyaxis left
-    ylabel('Elevation (cm)')
-    ylim_min = min(min(min(min(yfitaddt(pixelX,pixelY,:)))),min(min(min(yfit(pixelX,pixelY,:)))));
-    ylim_max = max(max(max(max(yfitaddt(pixelX,pixelY,:)))),max(max(max(yfit(pixelX,pixelY,:)))));
-    ylim([ylim_min,ylim_max])
-    yyaxis right
-    ylabel('NADDT (-)')
-%     legend(originallegendnames,'Location','bestoutside')
-    legend('','','','','','','','','InSAR time series','Fit','','','NADDT',"Location","southwest")
-    set(gca,'FontSize',20)
-    set(gcf,'Position',[100 100 1500 1000])
-    
-    nexttile
-
     for i = 1:entries
         yyaxis left
         scatter(dates_datetime,squeeze(ts_thaw_extrap(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
@@ -249,7 +222,7 @@ if freezedate > dates_datetime(num_dates)
         set(gca,'YDir','reverse')
         plot(dates_datetime_full,addt(dates_full_doy))
     end
-    title([num2str(year),' Seasonal Thaw Subsidence Extrapolated Fit'])
+    %title([num2str(year),' Seasonal Thaw Subsidence Extrapolated Fit'])
     xlabel('Date')
     yyaxis left
     ylabel('Elevation (cm)')
@@ -395,6 +368,33 @@ else
     legend('','','','','','','','','InSAR time series','Extrapolation','','','NADDT',"Location","southwest")
     set(gca,'FontSize',20)
     set(gcf,'Position',[100 100 1500 1000])
+
+    %Manuscript ts plot
+    figure
+    for i = 1:entries
+        yyaxis left
+        scatter(dates_datetime,squeeze(ts_thaw_extrap(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
+        hold on
+        plot(dates_datetime_full,squeeze(yfit(pixelX(i),pixelY(i),:)),colors{i},'LineWidth',3,'LineStyle',':')
+        yyaxis right
+        set(gca,'YDir','reverse')
+        plot(dates_datetime_full,addt(dates_full_doy))
+    end
+    %title([num2str(year),' Seasonal Thaw Subsidence Extrapolated Fit'])
+    xlabel('Date')
+    yyaxis left
+    ylabel('Elevation (cm)')
+    ylim([ylim_min,ylim_max])
+    yyaxis right
+    ylabel('NADDT (-)')
+%     legend(extraplegendnames,'Location','bestoutside')
+    legend('','','','','','','','','InSAR time series','Extrapolation','','','NADDT',"Location","southwest")
+    set(gca,'FontSize',20)
+    set(gcf,'Position',[100 100 1500 1000])
+    f = gcf;
+    f.WindowState = 'maximized';
+    aguplot = strcat(num2str(year),'_ts.png');
+    exportgraphics(f,aguplot)
 end
 %% error
 RMSE = zeros(nr,naz);
@@ -1099,8 +1099,12 @@ if isfile(ALT_core_string)
     e.Color = 'k';
 
     legend('ALT','Idealized 1-to-1 fit')
-    ax = gca;
-    ax.FontSize = 20;
+    set(gca,'FontSize',20)
+    set(gcf,'Position',[100 100 1500 1000])
+    f = gcf;
+    f.WindowState = 'maximized';
+    altplot = strcat(num2str(year),'_ALT_1_to_1_core.png');
+    exportgraphics(f,altplot)
 
 else
     disp("There is no ALT core data for this year.")
@@ -1183,8 +1187,12 @@ if isfile(ALT_probe_string)
     e.Color = 'k';
 
     legend('ALT','Idealized 1-to-1 fit')
-    ax = gca;
-    ax.FontSize = 20;
+    set(gca,'FontSize',20)
+    set(gcf,'Position',[100 100 1500 1000])
+    f = gcf;
+    f.WindowState = 'maximized';
+    altplot = strcat(num2str(year),'_ALT_1_to_1_probe.png');
+    exportgraphics(f,altplot)
 
 else
     disp("There is no probe data for this year.")
@@ -1229,8 +1237,12 @@ if isfile(ALT_core_string) %check if both core and probe data exists; if so, com
         e.Color = 'k';
 
         legend('ALT','Idealized 1-to-1 fit')
-        ax = gca;
-        ax.FontSize = 20;
+        set(gca,'FontSize',20)
+        set(gcf,'Position',[100 100 1500 1000])
+        f = gcf;
+        f.WindowState = 'maximized';
+        altplot = strcat(num2str(year),'_ALT_1_to_1_comb.png');
+        exportgraphics(f,altplot)
 
     else
         disp("Probe data does not exist. Only core data, so no need for combination of tables.")
@@ -1321,8 +1333,12 @@ if isfile(EIC_core_string)
     e.Color = 'k';
 
     legend('EIC','Idealized 1-to-1 fit')
-    ax = gca;
-    ax.FontSize = 20;
+    set(gca,'FontSize',20)
+    set(gcf,'Position',[100 100 1500 1000])
+    f = gcf;
+    f.WindowState = 'maximized';
+    altplot = strcat(num2str(year),'_EIC_1_to_1.png');
+    exportgraphics(f,altplot)
 else
     disp("There is no EIC core data for this year.")
 end
