@@ -288,6 +288,7 @@ else
     yfit = (yfit*100)./(cos(theta_inc')); %cm
     ts_thaw =(ts_thaw*100)./(cos(theta_inc')); %cm
 
+    ts_thaw_extrap = ts_thaw(:,:,:) - yfit(:,:,1);
     yfit(:,:,:) = yfit(:,:,:) - yfit(:,:,1);
 
     E = yfit(:,:,size(yfit,3)).*-1;
@@ -351,9 +352,9 @@ else
     nexttile
     for i = 1:entries
         yyaxis left
-        scatter(dates_datetime,squeeze(ts_thaw(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
+        scatter(dates_datetime(1:finaldate,1),squeeze(ts_thaw(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
         hold on
-        plot(dates_datetime,squeeze(yfitaddt(pixelX(i),pixelY(i),:)),colors{i},'LineWidth',3)
+        plot(dates_datetime(1:finaldate,1),squeeze(yfitaddt(pixelX(i),pixelY(i),:)),colors{i},'LineWidth',3)
         yyaxis right
         set(gca,'YDir','reverse')
         plot(dates_datetime_full,addt(dates_full_doy))
@@ -376,7 +377,7 @@ else
 
     for i = 1:entries
         yyaxis left
-        scatter(dates_datetime,squeeze(ts_thaw_extrap(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
+        scatter(dates_datetime(1:finaldate,1),squeeze(ts_thaw_extrap(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
         hold on
         plot(dates_datetime_full,squeeze(yfit(pixelX(i),pixelY(i),:)),colors{i},'LineWidth',3,'LineStyle',':')
         yyaxis right
@@ -403,7 +404,7 @@ for j = 1:nr
     disp(j)
     for k= 1:naz
         RMSE(j,k) = sqrt(mean((yfitaddt(j,k,:)-ts_thaw(j,k,:)).^2));
-        RMSE_extrap(j,k) = sqrt(mean((yfit(j,k,yfit_InSAR_dates)-ts_thaw(j,k,:)).^2));
+        RMSE_extrap(j,k) = sqrt(mean((yfit(j,k,yfit_InSAR_dates(i,1))-ts_thaw(j,k,:)).^2));
     end
 end
 
@@ -1049,8 +1050,8 @@ if isfile(ALT_core_string)
         processed_ALT = combined_core_table.ALT_cm;
         insitu_uncert_ALT = combined_core_table.Uncert_cm;
         
-        PixelX_ALT_avg =combined_core_table(:,2);
-        PixelY_ALT_avg = combined_core_table(:,3);
+        PixelX_ALT_avg =table2array(combined_core_table(:,2));
+        PixelY_ALT_avg = table2array(combined_core_table(:,3));
 
         ReSALT_ALT = zeros(size(combined_core_table,1),1);
         Error_ALT = zeros(size(combined_core_table,1),1);
@@ -1198,8 +1199,8 @@ if isfile(ALT_core_string) %check if both core and probe data exists; if so, com
         processed_ALT = full_ALT_table.ALT_cm;
         insitu_uncert_ALT = full_ALT_table.Uncert_cm;
 
-        PixelX_ALT_com = full_ALT_table(:,2);
-        PixelY_ALT_com = full_ALT_table(:,3);
+        PixelX_ALT_com = table2array(full_ALT_table(:,2));
+        PixelY_ALT_com = table2array(full_ALT_table(:,3));
         
         ReSALT_ALT = zeros(size(full_ALT_table,1),1);
         Error_ALT = zeros(size(full_ALT_table,1),1);
@@ -1296,10 +1297,10 @@ if isfile(EIC_core_string)
     PixelX_EIC = combined_EIC_core_table.PixelX;
     PixelY_EIC = combined_EIC_core_table.PixelY;
     
-    ReSALT_EIC = zeros(entries,1);
-    Error_EIC = zeros(entries,1);
+    ReSALT_EIC = zeros(size(combined_EIC_core_table,1),1);
+    Error_EIC = zeros(size(combined_EIC_core_table,1),1);
 
-    for i = 1:entries
+    for i = 1:size(combined_EIC_core_table,1)
         ReSALT_EIC(i,1) = Percent_GIC(PixelY_EIC(i,1),PixelX_EIC(i,1));
         Error_EIC(i,1) = error_EIC(PixelY_EIC(i,1),PixelX_EIC(i,1));
     end
@@ -1331,10 +1332,10 @@ disp("In situ EIC plotting section complete!")
 
 if exist('ReSALT_ALT','var')
     processed_ALT(isnan(ReSALT_ALT))=[];
-    insitu_uncert_ALT(isnan(ReSALT_ALT));
+    insitu_uncert_ALT(isnan(ReSALT_ALT))=[];
     ReSALT_ALT(isnan(ReSALT_ALT))=[]; %remove nan from masked out cores
 
-    r_squared_ALT = ((ReSALT_ALT - processed_ALT)/(insitu_uncert_ALT)).^2;
+    r_squared_ALT = ((ReSALT_ALT - processed_ALT)./(insitu_uncert_ALT)).^2;
     mean_r_squared_ALT = mean(r_squared_ALT,'omitnan');
 
     disp(strcat('Average in situ ALT is: ',num2str(mean(processed_ALT)),' cm'))
@@ -1348,7 +1349,7 @@ if exist('ReSALT_EIC','var')
     insitu_uncert_EIC(isnan(ReSALT_EIC))=[];
     ReSALT_EIC(isnan(ReSALT_EIC))=[]; %remove nan from masked out cores
 
-    r_squared_EIC = ((ReSALT_EIC - processed_EIC)/(insitu_uncert_EIC)).^2;
+    r_squared_EIC = ((ReSALT_EIC - processed_EIC)./(insitu_uncert_EIC)).^2;
     mean_r_squared_EIC = mean(r_squared_EIC,'omitnan');
 
     disp(strcat('Average in situ EIC is: ',num2str(mean(processed_EIC)),'%'))
