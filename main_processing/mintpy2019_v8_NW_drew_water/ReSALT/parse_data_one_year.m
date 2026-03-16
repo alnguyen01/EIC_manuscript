@@ -373,7 +373,7 @@ else
     figure
     for i = 1:entries
         yyaxis left
-        scatter(dates_datetime,squeeze(ts_thaw_extrap(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
+        scatter(dates_datetime(1:finaldate,1),squeeze(ts_thaw_extrap(pixelX(i),pixelY(i),:)),100,colors_full{i},'filled')
         hold on
         plot(dates_datetime_full,squeeze(yfit(pixelX(i),pixelY(i),:)),colors{i},'LineWidth',3,'LineStyle',':')
         yyaxis right
