@@ -178,8 +178,8 @@ if freezedate > dates_datetime(num_dates)
     xlabel('Date')
     yyaxis left
     ylabel('Elevation (cm)')
-    ylim_min = min(min(min(min(yfitaddt(pixelX,pixelY,:)))),min(min(min(yfit(pixelX,pixelY,:)))));
-    ylim_max = max(max(max(max(yfitaddt(pixelX,pixelY,:)))),max(max(max(yfit(pixelX,pixelY,:)))));
+    ylim_min = min(min(min(ts_thaw_extrap(pixelX(:),pixelY(:),:))));
+    ylim_max = max(max(max(ts_thaw_extrap(pixelX(:),pixelY(:),:))));
     ylim([ylim_min,ylim_max])
     yyaxis right
     ylabel('NADDT (-)')
@@ -231,7 +231,7 @@ if freezedate > dates_datetime(num_dates)
     ylabel('NADDT (-)')
 %     legend(extraplegendnames,'Location','bestoutside')
     legend('','','','','','','','','InSAR time series','Extrapolation','','','NADDT',"Location","southwest")
-    set(gca,'FontSize',20)
+    set(gca,'FontSize',30)
     set(gcf,'Position',[100 100 1500 1000])
     f = gcf;
     f.WindowState = 'maximized';
@@ -336,8 +336,8 @@ else
     xlabel('Date')
     yyaxis left
     ylabel('Elevation (cm)')
-    ylim_min = min(min(min(min(yfitaddt(pixelX,pixelY,:)))),min(min(min(yfit(pixelX,pixelY,:)))));
-    ylim_max = max(max(max(max(yfitaddt(pixelX,pixelY,:)))),max(max(max(yfit(pixelX,pixelY,:)))));
+    ylim_min = min(min(min(ts_thaw_extrap(pixelX(:),pixelY(:),1:finaldate))));
+    ylim_max = max(max(max(ts_thaw_extrap(pixelX(:),pixelY(:),1:finaldate))));
     ylim([ylim_min,ylim_max])
     yyaxis right
     ylabel('NADDT (-)')
@@ -389,7 +389,7 @@ else
     ylabel('NADDT (-)')
 %     legend(extraplegendnames,'Location','bestoutside')
     legend('','','','','','','','','InSAR time series','Extrapolation','','','NADDT',"Location","southwest")
-    set(gca,'FontSize',20)
+    set(gca,'FontSize',30)
     set(gcf,'Position',[100 100 1500 1000])
     f = gcf;
     f.WindowState = 'maximized';
@@ -737,6 +737,7 @@ test_stats_matrix = cat(3, E', RMSE', ref_alt_nan, joint_error, Delta_deform, er
 percent5mat = zeros(size(test_stats_matrix,3),1);
 percent95mat = zeros(size(test_stats_matrix,3),1);
 avgmat = zeros(size(test_stats_matrix,3),1);
+medmat = zeros(size(test_stats_matrix,3),1);
 
 for i = 1:size(test_stats_matrix,3)
     stats_array = squeeze(test_stats_matrix(:,:,i));
@@ -744,24 +745,73 @@ for i = 1:size(test_stats_matrix,3)
     percent5mat(i,1) = prctile(row_stats_array,5);
     percent95mat(i,1) = prctile(row_stats_array,95);
     avgmat(i,1) = mean(row_stats_array,1,'omitnan');
+    medmat(i,1) = median(row_stats_array,1,'omitnan');
 end
 
 E_stats = {strcat(num2str(round(percent5mat(1,1),2)),' - ',num2str(round(percent95mat(1,1),2)),' +/- ',...
-    num2str(round(percent5mat(2,1),2)),' - ',num2str(round(percent95mat(2,1),2))) , strcat(round(num2str(avgmat(1,1),2)),...
-    ' +/- ',num2str(round(avgmat(2,1),2)))};
+    num2str(round(percent5mat(2,1),2)),' - ',num2str(round(percent95mat(2,1),2))) , strcat(num2str(round(avgmat(1,1),2)),...
+    ' +/- ',num2str(round(avgmat(2,1),2))), ...
+    strcat(num2str(round(medmat(1,1),2)),' +/- ',num2str(round(medmat(2,1),2)))};
 ALT_stats = {strcat(num2str(round(percent5mat(3,1),2)),' - ',num2str(round(percent95mat(3,1),2)),' +/- ',...
-    num2str(round(percent5mat(4,1),2)),' - ',num2str(round(percent95mat(4,1),2))) , strcat(round(num2str(avgmat(3,1),2)),...
-    ' +/- ',num2str(round(avgmat(4,1),2)))};
+    num2str(round(percent5mat(4,1),2)),' - ',num2str(round(percent95mat(4,1),2))) , strcat(num2str(round(avgmat(3,1),2)),...
+    ' +/- ',num2str(round(avgmat(4,1),2))), ...
+    strcat(num2str(round(medmat(3,1),2)),' +/- ',num2str(round(medmat(4,1),2)))};
 EIC_thick_stats = {strcat(num2str(round(percent5mat(5,1),2)),' - ',num2str(round(percent95mat(5,1),2)),' +/- ',...
-    num2str(round(percent5mat(6,1),2)),' - ',num2str(round(percent95mat(6,1),2))) , strcat(round(num2str(avgmat(5,1),2)),...
-    ' +/- ',num2str(round(avgmat(6,1),2)))};
+    num2str(round(percent5mat(6,1),2)),' - ',num2str(round(percent95mat(6,1),2))) , strcat(num2str(round(avgmat(5,1),2)),...
+    ' +/- ',num2str(round(avgmat(6,1),2))), ...
+    strcat(num2str(round(medmat(5,1),2)),' +/- ',num2str(round(medmat(6,1),2)))};
 Percent_EIC_stats = {strcat(num2str(round(percent5mat(7,1),2)),' - ',num2str(round(percent95mat(7,1),2)),' +/- ',...
-    num2str(round(percent5mat(8,1),2)),' - ',num2str(round(percent95mat(8,1),2))) , strcat(round(num2str(avgmat(7,1),2)),...
-    ' +/- ',num2str(round(avgmat(8,1),2)))};
+    num2str(round(percent5mat(8,1),2)),' - ',num2str(round(percent95mat(8,1),2))) , strcat(num2str(round(avgmat(7,1),2)),...
+    ' +/- ',num2str(round(avgmat(8,1),2))), ...
+    strcat(num2str(round(medmat(7,1),2)),' +/- ',num2str(round(medmat(8,1),2)))};
 
 stats_table = table(E_stats, ALT_stats, EIC_thick_stats, Percent_EIC_stats);
 
 %% FIGURES BELOW
+%% histogram fig
+figure
+tiledlayout(2,2)
+nexttile
+histogram(E)
+ylabel('Counts')
+xlabel('Seasonal Subsidence, E [cm]')
+hold on
+xline(medmat(1,:),'label',['Median = ', num2str(round(medmat(1,:),1))],'LabelOrientation','horizontal','FontSize',30)
+set(gca,'FontSize',30)
+set(gcf,'Position',[100 100 1500 1000])
+
+nexttile
+histogram(ref_alt_nan)
+ylabel('Counts')
+xlabel('ALT [cm]')
+hold on
+xline(medmat(3,:),'label',['Median = ', num2str(round(medmat(3,:),1))],'LabelOrientation','horizontal','FontSize',30)
+set(gca,'FontSize',30)
+set(gcf,'Position',[100 100 1500 1000])
+
+nexttile
+histogram(Delta_deform)
+ylabel('Counts')
+xlabel('EIC Thickness [cm]')
+hold on
+xline(medmat(5,:),'label',['Median = ', num2str(round(medmat(5,:),1))],'LabelOrientation','horizontal','FontSize',30)
+set(gca,'FontSize',30)
+set(gcf,'Position',[100 100 1500 1000])
+
+nexttile
+histogram(Percent_GIC)
+ylabel('Counts')
+xlabel('%EIC [%]')
+hold on
+xline(medmat(7,:),'label',['Median = ', num2str(round(medmat(7,:),1))],'LabelOrientation','horizontal','FontSize',30)
+
+set(gca,'FontSize',30)
+set(gcf,'Position',[100 100 1500 1000])
+f = gcf;
+f.WindowState = 'maximized';
+histplot = strcat(num2str(year),'_histo.png');
+exportgraphics(f,histplot)
+
 %% E & ALT fig
 
 figure
