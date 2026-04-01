@@ -731,39 +731,29 @@ ref_alt_nan = ref_alt;
 ref_alt_nan(ref_alt==0) = NaN;
 
 %% stats
-test_stats_matrix = cat(3, E', RMSE', ref_alt_nan, joint_error, Delta_deform, error_EIC_pt1,...
-    Percent_GIC, error_EIC);
+test_stats_matrix = cat(3, E', ref_alt_nan, Delta_deform,...
+    Percent_GIC);
 
 percent5mat = zeros(size(test_stats_matrix,3),1);
 percent95mat = zeros(size(test_stats_matrix,3),1);
-avgmat = zeros(size(test_stats_matrix,3),1);
 medmat = zeros(size(test_stats_matrix,3),1);
+percent25mat = zeros(size(test_stats_matrix,3),1);
+percent75mat = zeros(size(test_stats_matrix,3),1);
 
 for i = 1:size(test_stats_matrix,3)
     stats_array = squeeze(test_stats_matrix(:,:,i));
     row_stats_array = (stats_array(:));
     percent5mat(i,1) = prctile(row_stats_array,5);
+    percent25mat(i,1) = prctile(row_stats_array,25);
+    percent75mat(i,1) = prctile(row_stats_array,75);
     percent95mat(i,1) = prctile(row_stats_array,95);
-    avgmat(i,1) = mean(row_stats_array,1,'omitnan');
     medmat(i,1) = median(row_stats_array,1,'omitnan');
 end
 
-E_stats = {strcat(num2str(round(percent5mat(1,1),2)),' - ',num2str(round(percent95mat(1,1),2)),' +/- ',...
-    num2str(round(percent5mat(2,1),2)),' - ',num2str(round(percent95mat(2,1),2))) , strcat(num2str(round(avgmat(1,1),2)),...
-    ' +/- ',num2str(round(avgmat(2,1),2))), ...
-    strcat(num2str(round(medmat(1,1),2)),' +/- ',num2str(round(medmat(2,1),2)))};
-ALT_stats = {strcat(num2str(round(percent5mat(3,1),2)),' - ',num2str(round(percent95mat(3,1),2)),' +/- ',...
-    num2str(round(percent5mat(4,1),2)),' - ',num2str(round(percent95mat(4,1),2))) , strcat(num2str(round(avgmat(3,1),2)),...
-    ' +/- ',num2str(round(avgmat(4,1),2))), ...
-    strcat(num2str(round(medmat(3,1),2)),' +/- ',num2str(round(medmat(4,1),2)))};
-EIC_thick_stats = {strcat(num2str(round(percent5mat(5,1),2)),' - ',num2str(round(percent95mat(5,1),2)),' +/- ',...
-    num2str(round(percent5mat(6,1),2)),' - ',num2str(round(percent95mat(6,1),2))) , strcat(num2str(round(avgmat(5,1),2)),...
-    ' +/- ',num2str(round(avgmat(6,1),2))), ...
-    strcat(num2str(round(medmat(5,1),2)),' +/- ',num2str(round(medmat(6,1),2)))};
-Percent_EIC_stats = {strcat(num2str(round(percent5mat(7,1),2)),' - ',num2str(round(percent95mat(7,1),2)),' +/- ',...
-    num2str(round(percent5mat(8,1),2)),' - ',num2str(round(percent95mat(8,1),2))) , strcat(num2str(round(avgmat(7,1),2)),...
-    ' +/- ',num2str(round(avgmat(8,1),2))), ...
-    strcat(num2str(round(medmat(7,1),2)),' +/- ',num2str(round(medmat(8,1),2)))};
+E_stats = {strcat(num2str(round(percent5mat(1,1),1)),' - ',num2str(round(percent95mat(1,1),1))), num2str(round(medmat(1,1),1)), strcat(num2str(round(percent25mat(1,1),1)), ' - ' , num2str(round(percent75mat(1,1),1)))};
+ALT_stats = {strcat(num2str(round(percent5mat(2,1),1)),' - ',num2str(round(percent95mat(2,1),1))), num2str(round(medmat(2,1),1)), strcat(num2str(round(percent25mat(2,1),1)),' - ', num2str(round(percent75mat(2,1),1)))};
+EIC_thick_stats = {strcat(num2str(round(percent5mat(3,1),1)),' - ',num2str(round(percent95mat(3,1),1))), num2str(round(medmat(3,1),1)), strcat(num2str(round(percent25mat(3,1),1)),' - ', num2str(round(percent75mat(3,1),1)))};
+Percent_EIC_stats = {strcat(num2str(round(percent5mat(4,1),1)),' - ',num2str(round(percent95mat(4,1),1))), num2str(round(medmat(4,1),1)), strcat(num2str(round(percent25mat(4,1),1)), ' - ', num2str(round(percent75mat(4,1),1)))};
 
 stats_table = table(E_stats, ALT_stats, EIC_thick_stats, Percent_EIC_stats);
 
