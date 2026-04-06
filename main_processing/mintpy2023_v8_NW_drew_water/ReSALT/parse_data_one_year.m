@@ -775,7 +775,7 @@ histogram(ref_alt_nan)
 ylabel('Counts')
 xlabel('ALT [cm]')
 hold on
-xline(medmat(3,:),'label',['Median = ', num2str(round(medmat(3,:),1))],'LabelOrientation','horizontal','FontSize',30)
+xline(medmat(2,:),'label',['Median = ', num2str(round(medmat(2,:),1))],'LabelOrientation','horizontal','FontSize',30)
 set(gca,'FontSize',30)
 set(gcf,'Position',[100 100 1500 1000])
 
@@ -784,7 +784,7 @@ histogram(Delta_deform)
 ylabel('Counts')
 xlabel('EIC Thickness [cm]')
 hold on
-xline(medmat(5,:),'label',['Median = ', num2str(round(medmat(5,:),1))],'LabelOrientation','horizontal','FontSize',30)
+xline(medmat(3,:),'label',['Median = ', num2str(round(medmat(3,:),1))],'LabelOrientation','horizontal','FontSize',30)
 set(gca,'FontSize',30)
 set(gcf,'Position',[100 100 1500 1000])
 
@@ -793,7 +793,7 @@ histogram(Percent_GIC)
 ylabel('Counts')
 xlabel('%EIC [%]')
 hold on
-xline(medmat(7,:),'label',['Median = ', num2str(round(medmat(7,:),1))],'LabelOrientation','horizontal','FontSize',30)
+xline(medmat(4,:),'label',['Median = ', num2str(round(medmat(4,:),1))],'LabelOrientation','horizontal','FontSize',30)
 
 set(gca,'FontSize',30)
 set(gcf,'Position',[100 100 1500 1000])
