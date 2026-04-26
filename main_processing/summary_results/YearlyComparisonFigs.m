@@ -16,11 +16,12 @@ xscale('log')
 yscale('log')
 xlim([10, 1000])
 ylim([0,30])
-xlabel('EIC Mean $r^{2}$',Interpreter='latex',FontSize=20)
-ylabel('ALT Mean $r^{2}$',Interpreter='latex',FontSize=20)
+ylabel('EIC Mean $r^{2}$',Interpreter='latex',FontSize=20)
+xlabel('ALT Mean $r^{2}$',Interpreter='latex',FontSize=20)
 ax = gca;
 ax.FontSize =20;
 set(ax, 'Box', 'off')
+legend('off')
 
 nexttile
 linfit = fitlm(ADDT,ALT_r2,'linear');
@@ -31,7 +32,7 @@ end
 p(1).MarkerSize = 12;
 p(1).Marker = 'o';
 p(1).MarkerFaceColor = 'b';
-legend('Location',[0.373079243408212 0.722563103926399 0.0973331236577854 0.119331069544059]);
+legend('Location',[0.3839 0.7108 0.1294, 0.1436]);
 xlim([200,700])
 ylim([0,510])
 xlabel(['ADDT (',char(176),'C days)'],'FontSize',20)
