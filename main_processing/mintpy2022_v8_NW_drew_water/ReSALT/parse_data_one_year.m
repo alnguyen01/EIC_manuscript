@@ -177,7 +177,7 @@ if freezedate > dates_datetime(num_dates)
     title([num2str(year),' Seasonal Thaw Subsidence Original Fit'])
     xlabel('Date')
     yyaxis left
-    ylabel('Elevation (cm)')
+    ylabel('Relative Elevation (cm)')
     ylim_min = min(min(min(ts_thaw_extrap(pixelX(:),pixelY(:),:))));
     ylim_max = max(max(max(ts_thaw_extrap(pixelX(:),pixelY(:),:))));
     ylim([ylim_min,ylim_max])
@@ -202,7 +202,7 @@ if freezedate > dates_datetime(num_dates)
     title([num2str(year),' Seasonal Thaw Subsidence Extrapolated Fit'])
     xlabel('Date')
     yyaxis left
-    ylabel('Elevation (cm)')
+    ylabel('Relative Elevation (cm)')
     ylim([ylim_min,ylim_max])
     yyaxis right
     ylabel('NADDT (-)')
@@ -225,7 +225,7 @@ if freezedate > dates_datetime(num_dates)
     %title([num2str(year),' Seasonal Thaw Subsidence Extrapolated Fit'])
     xlabel('Date')
     yyaxis left
-    ylabel('Elevation (cm)')
+    ylabel('Relative Elevation (cm)')
     ylim([ylim_min,ylim_max])
     yyaxis right
     ylabel('NADDT (-)')
@@ -335,7 +335,7 @@ else
     title([num2str(year),' Seasonal Thaw Subsidence Original Fit'])
     xlabel('Date')
     yyaxis left
-    ylabel('Elevation (cm)')
+    ylabel('Relative Elevation (cm)')
     ylim_min = min(min(min(ts_thaw_extrap(pixelX(:),pixelY(:),1:finaldate))));
     ylim_max = max(max(max(ts_thaw_extrap(pixelX(:),pixelY(:),1:finaldate))));
     ylim([ylim_min,ylim_max])
@@ -360,7 +360,7 @@ else
     title([num2str(year),' Seasonal Thaw Subsidence Extrapolated Fit'])
     xlabel('Date')
     yyaxis left
-    ylabel('Elevation (cm)')
+    ylabel('Relative Elevation (cm)')
     ylim([ylim_min,ylim_max])
     yyaxis right
     ylabel('NADDT (-)')
@@ -383,7 +383,7 @@ else
     %title([num2str(year),' Seasonal Thaw Subsidence Extrapolated Fit'])
     xlabel('Date')
     yyaxis left
-    ylabel('Elevation (cm)')
+    ylabel('Relative Elevation (cm)')
     ylim([ylim_min,ylim_max])
     yyaxis right
     ylabel('NADDT (-)')
@@ -1121,7 +1121,7 @@ if isfile(ALT_core_string)
     end
 
     figure
-    scatter(combined_core_table.ALT_cm,ReSALT_ALT,'filled')
+    scatter(combined_core_table.ALT_cm,ReSALT_ALT,180,'filled','o')
     hold on
 
     xlabel('In situ ALT [cm]')
@@ -1131,15 +1131,15 @@ if isfile(ALT_core_string)
     lim = round((lim + max(Error_ALT) + 10)/5)*5;
     xlim([0, lim])
     ylim([0, lim])
-    plot([0 xlim],[0 ylim],'--r')
+    plot([0 xlim],[0 ylim],'--r','LineWidth',2.5)
 
-    f = errorbar(combined_core_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
+    f = errorbar(combined_core_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none','LineWidth',2.5);
     f.Color = 'k';
-    e = errorbar(combined_core_table.ALT_cm,ReSALT_ALT,combined_core_table.Uncert_cm,'horizontal','linestyle','none');
+    e = errorbar(combined_core_table.ALT_cm,ReSALT_ALT,combined_core_table.Uncert_cm,'horizontal','linestyle','none','LineWidth',2.5);
     e.Color = 'k';
 
-    legend('ALT','Idealized 1-to-1 fit')
-    set(gca,'FontSize',20)
+    legend('ALT','1-to-1')
+    set(gca,'FontSize',30)
     set(gcf,'Position',[100 100 1500 1000])
     f = gcf;
     f.WindowState = 'maximized';
@@ -1209,7 +1209,7 @@ if isfile(ALT_probe_string)
     end
 
     figure
-    scatter(combined_probe_table.ALT_cm,ReSALT_ALT,'filled')
+    scatter(combined_probe_table.ALT_cm,ReSALT_ALT,180,'filled','o')
     hold on
 
     xlabel('In situ ALT [cm]')
@@ -1219,15 +1219,15 @@ if isfile(ALT_probe_string)
     lim = round((lim + max(Error_ALT) + 10)/5)*5;
     xlim([0, lim])
     ylim([0, lim])
-    plot([0 xlim],[0 ylim],'--r')
+    plot([0 xlim],[0 ylim],'--r','LineWidth',2.5)
 
-    f = errorbar(combined_probe_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
+    f = errorbar(combined_probe_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none','LineWidth',2.5);
     f.Color = 'k';
-    e = errorbar(combined_probe_table.ALT_cm,ReSALT_ALT,combined_probe_table.Uncert_cm,'horizontal','linestyle','none');
+    e = errorbar(combined_probe_table.ALT_cm,ReSALT_ALT,combined_probe_table.Uncert_cm,'horizontal','linestyle','none','LineWidth',2.5);
     e.Color = 'k';
 
-    legend('ALT','Idealized 1-to-1 fit')
-    set(gca,'FontSize',20)
+    legend('ALT','1-to-1')
+    set(gca,'FontSize',30)
     set(gcf,'Position',[100 100 1500 1000])
     f = gcf;
     f.WindowState = 'maximized';
@@ -1259,7 +1259,7 @@ if isfile(ALT_core_string) %check if both core and probe data exists; if so, com
         end
         
         figure
-        scatter(full_ALT_table.ALT_cm,ReSALT_ALT,'filled')
+        scatter(full_ALT_table.ALT_cm,ReSALT_ALT,180,'filled','o')
         hold on
 
         xlabel('In situ ALT [cm]')
@@ -1269,15 +1269,15 @@ if isfile(ALT_core_string) %check if both core and probe data exists; if so, com
         lim = round((lim + max(Error_ALT) + 10)/5)*5;
         xlim([0, lim])
         ylim([0, lim])
-        plot([0 xlim],[0 ylim],'--r')
+        plot([0 xlim],[0 ylim],'--r','LineWidth',2.5)
 
-        f = errorbar(full_ALT_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none');
+        f = errorbar(full_ALT_table.ALT_cm,ReSALT_ALT,Error_ALT,'vertical','Linestyle','none','LineWidth',2.5);
         f.Color = 'k';
-        e = errorbar(full_ALT_table.ALT_cm,ReSALT_ALT,full_ALT_table.Uncert_cm,'horizontal','linestyle','none');
+        e = errorbar(full_ALT_table.ALT_cm,ReSALT_ALT,full_ALT_table.Uncert_cm,'horizontal','linestyle','none','LineWidth',2.5);
         e.Color = 'k';
 
-        legend('ALT','Idealized 1-to-1 fit')
-        set(gca,'FontSize',20)
+        legend('ALT','1-to-1')
+        set(gca,'FontSize',30)
         set(gcf,'Position',[100 100 1500 1000])
         f = gcf;
         f.WindowState = 'maximized';
@@ -1357,7 +1357,7 @@ if isfile(EIC_core_string)
         Error_EIC(i,1) = error_EIC(PixelY_EIC(i,1),PixelX_EIC(i,1));
     end
     figure
-    scatter(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,'filled')
+    scatter(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,180,'filled','o')
     hold on
     xlabel('In situ EIC [%]')
     ylabel('InSAR-derived EIC [%]')
@@ -1365,15 +1365,15 @@ if isfile(EIC_core_string)
     lim = max(max(insitu_EIC),max(ReSALT_EIC));
     xlim([0,round((lim+10)/5)*5])
     ylim([0,round((lim+10)/5)*5])
-    plot(xlim,ylim,'--r')
+    plot(xlim,ylim,'--r','LineWidth',2.5)
 
-    f = errorbar(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,Error_EIC,'vertical','Linestyle','none');
+    f = errorbar(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,Error_EIC,'vertical','Linestyle','none','LineWidth',2.5);
     f.Color = 'k';
-    e = errorbar(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,combined_EIC_core_table.("Uncert_%"),'horizontal','linestyle','none');
+    e = errorbar(combined_EIC_core_table.("EIC_%"),ReSALT_EIC,combined_EIC_core_table.("Uncert_%"),'horizontal','linestyle','none','LineWidth',2.5);
     e.Color = 'k';
 
-    legend('EIC','Idealized 1-to-1 fit')
-    set(gca,'FontSize',20)
+    legend('EIC','1-to-1')
+    set(gca,'FontSize',30)
     set(gcf,'Position',[100 100 1500 1000])
     f = gcf;
     f.WindowState = 'maximized';
