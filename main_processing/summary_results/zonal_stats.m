@@ -101,8 +101,9 @@ xticklabels(labels)
 ylabel('Seasonal Subsidence (cm)')
 ax = gca;
 ax.FontSize = 17.5;
-ax.LineWidth = 1.5;
+%ax.LineWidth = 1.5;
 text(0.6, 7, 'A.)','FontSize',17.5,'FontWeight','bold')
+box off
 
 bx1 = findobj(gca,'Tag','boxplot');
 set(bx1.Children,'LineWidth',1.5)
@@ -114,8 +115,9 @@ xticklabels(labels)
 ylabel('%EIC')
 ax = gca;
 ax.FontSize = 17.5;
-ax.LineWidth = 1.5;
+%ax.LineWidth = 1.5;
 text(0.6, 20, 'B.)','FontSize',17.5,'FontWeight','bold')
+box off
 
 bx1 = findobj(gca,'Tag','boxplot');
 set(bx1.Children,'LineWidth',1.5)
@@ -127,8 +129,9 @@ xticklabels(labels)
 ylabel('Elevation (m)')
 ax = gca;
 ax.FontSize = 17.5;
-ax.LineWidth = 1.5;
+%ax.LineWidth = 1.5;
 text(0.6, 4.7, 'C.)','FontSize',17.5,'FontWeight','bold')
+box off
 
 bx1 = findobj(gca,'Tag','boxplot');
 set(bx1.Children,'LineWidth',1.5)
@@ -140,8 +143,9 @@ xticklabels(labels)
 ylabel(['Slope (',char(176),')'])
 ax = gca;
 ax.FontSize = 17.5;
-ax.LineWidth = 1.5;
+%ax.LineWidth = 1.5;
 text(0.6, 0.45, 'D.)','FontSize',17.5,'FontWeight','bold')
+box off
 
 bx1 = findobj(gca,'Tag','boxplot');
 set(bx1.Children,'LineWidth',1.5)
