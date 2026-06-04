@@ -141,6 +141,7 @@ boxplot(slope_data.', 'Whisker', 0);
 xticks(1:numel(labels))
 xticklabels(labels)
 ylabel(['Slope (',char(176),')'])
+ylim([0 0.5])
 ax = gca;
 ax.FontSize = 17.5;
 %ax.LineWidth = 1.5;
