@@ -1,0 +1,22 @@
+bergstedt_jones = readgeotable("Integrated_Lake_Ice_Regime_Classification.json");
+%%
+class = bergstedt_jones.Class_IR_b;
+class_first = extract(class,1);
+class_binary = zeros(size(class,1),1);
+%%
+for i = 1:size(class,1)
+    if class_first(i,1) == 'B'
+        class_binary(i) = 0;
+    end
+    if class_first(i,1) == 'F'
+        class_binary(i) = 1;
+    end
+    if class_first(i,1) ~= 'B'
+        if class_first(i,1) ~= 'F'
+            class_binary(i) = NaN;
+        end
+    end
+end
+%%
+bergstedt_jones.("Class_First") = class_first;
+bergstedt_jones.("Binary") = class_binary;
