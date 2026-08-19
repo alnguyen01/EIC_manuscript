@@ -757,6 +757,31 @@ Percent_EIC_stats = {strcat(num2str(round(percent5mat(4,1),1)),' - ',num2str(rou
 
 stats_table = table(E_stats, ALT_stats, EIC_thick_stats, Percent_EIC_stats);
 
+%% uncertainty stats
+uncert_stats_matrix = cat(3, err_deform, joint_error, error_EIC);
+
+percent5mat = zeros(size(uncert_stats_matrix,3),1);
+percent95mat = zeros(size(uncert_stats_matrix,3),1);
+medmat = zeros(size(uncert_stats_matrix,3),1);
+percent25mat = zeros(size(uncert_stats_matrix,3),1);
+percent75mat = zeros(size(uncert_stats_matrix,3),1);
+
+for i = 1:size(uncert_stats_matrix,3)
+    stats_array = squeeze(uncert_stats_matrix(:,:,i));
+    row_stats_array = (stats_array(:));
+    percent5mat(i,1) = prctile(row_stats_array,5);
+    percent25mat(i,1) = prctile(row_stats_array,25);
+    percent75mat(i,1) = prctile(row_stats_array,75);
+    percent95mat(i,1) = prctile(row_stats_array,95);
+    medmat(i,1) = median(row_stats_array,1,'omitnan');
+end
+
+E_uncert_stats = {strcat(num2str(round(percent5mat(1,1),1)),' - ',num2str(round(percent95mat(1,1),1))), num2str(round(medmat(1,1),1)), strcat(num2str(round(percent25mat(1,1),1)), ' - ' , num2str(round(percent75mat(1,1),1)))};
+ALT_uncert_stats = {strcat(num2str(round(percent5mat(2,1),1)),' - ',num2str(round(percent95mat(2,1),1))), num2str(round(medmat(2,1),1)), strcat(num2str(round(percent25mat(2,1),1)),' - ', num2str(round(percent75mat(2,1),1)))};
+EIC_uncert_stats = {strcat(num2str(round(percent5mat(3,1),1)),' - ',num2str(round(percent95mat(3,1),1))), num2str(round(medmat(3,1),1)), strcat(num2str(round(percent25mat(3,1),1)),' - ', num2str(round(percent75mat(3,1),1)))};
+
+uncert_stats_table = table(E_uncert_stats, ALT_uncert_stats, EIC_uncert_stats);
+
 %% FIGURES BELOW
 %% histogram fig
 figure
