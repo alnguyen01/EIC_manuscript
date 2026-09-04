@@ -16,8 +16,8 @@ xscale('log')
 yscale('log')
 xlim([10, 1000])
 ylim([0,30])
-ylabel('EIC Mean $r^{2}$',Interpreter='latex',FontSize=20)
-xlabel('ALT Mean $r^{2}$',Interpreter='latex',FontSize=20)
+ylabel('EIC $\chi^{2}$',Interpreter='latex',FontSize=20)
+xlabel('ALT $\chi^{2}$',Interpreter='latex',FontSize=20)
 ax = gca;
 ax.FontSize =20;
 set(ax, 'Box', 'off')
@@ -36,7 +36,7 @@ legend('Location',[0.3839 0.7108 0.1294, 0.1436]);
 xlim([200,700])
 ylim([0,510])
 xlabel(['ADDT (',char(176),'C days)'],'FontSize',20)
-ylabel('ALT Mean $r^{2}$',Interpreter='latex',FontSize=20)
+ylabel('ALT $\chi^{2}$',Interpreter='latex',FontSize=20)
 title('')
 text(210,350,['y = ',num2str(linfit.Coefficients.Estimate(2)),'x +',num2str(linfit.Coefficients.Estimate(1))],'FontSize',20)
 text(210,310,['$R^{2} =$',num2str(round(linfit.Rsquared.Ordinary,2))],'Interpreter','latex','fontsize',20)
@@ -52,7 +52,7 @@ for i = 1:length(labels)
 end
 text(210, 19, 'C.)', 'FontSize', 20, 'FontWeight', 'bold');
 xlabel(['ADDT (', char(176), 'C days)'], 'FontSize', 20);
-ylabel('EIC Mean $r^{2}$', 'Interpreter', 'latex', 'FontSize', 20);
+ylabel('EIC $\chi^{2}$', 'Interpreter', 'latex', 'FontSize', 20);
 xlim([200, 700])
 ylim([0, 20])
 ax = gca;
@@ -229,7 +229,7 @@ xlabel('Drainage Age', 'FontSize', 15);
 ylabel('Seasonal Subsidence (cm)')
 xlim([0, 2500])
 ylim([0, 12])
-legend(["14C DTLB Average", "Study Area-Wide Average", "Data", "Linear Fit", "95% conf.bounds"],'Location','southeast')
+legend('off')
 text(10,10.5,['y = ',num2str(fitlincoastal2019.Coefficients.Estimate(2)),'x +',num2str(fitlincoastal2019.Coefficients.Estimate(1))],'FontSize',15)
 text(10,9.8,['$R^{2} =$',num2str(round(fitlincoastal2019.Rsquared.Ordinary,2))],'Interpreter','latex','fontsize',15)
 text(10, 11.5, 'B.)','FontSize',15,'FontWeight','bold')
@@ -255,7 +255,7 @@ xlabel('Drainage Age', 'FontSize', 15);
 ylabel('Seasonal Subsidence (cm)')
 xlim([0, 2500])
 ylim([0, 5])
-legend(["14C DTLB Average", "Study Area-Wide Average", "Data", "Linear Fit", "95% conf.bounds"],'Location','southwest')
+legend('off')
 text(10,3.8,['y = ',num2str(fitlininland2021.Coefficients.Estimate(2)),'x +',num2str(fitlininland2021.Coefficients.Estimate(1))],'FontSize',15)
 text(10,3.5,['$R^{2} =$',num2str(round(fitlininland2021.Rsquared.Ordinary,2))],'Interpreter','latex','fontsize',15)
 text(10, 4.5, 'C.)','FontSize',15,'FontWeight','bold')
@@ -280,7 +280,7 @@ xlabel('Drainage Age', 'FontSize', 15);
 ylabel('Seasonal Subsidence (cm)')
 xlim([0, 2500])
 ylim([0, 5])
-legend(["14C DTLB Average", "Study Area-Wide Average", "Data", "Linear Fit", "95% conf.bounds"],'Location','northeast')
+legend('off')
 text(10,3.8,['y = ',num2str(fitlincoastal2021.Coefficients.Estimate(2)),'x +',num2str(fitlincoastal2021.Coefficients.Estimate(1))],'FontSize',15)
 text(10,3.5,['$R^{2} =$',num2str(round(fitlincoastal2021.Rsquared.Ordinary,2))],'Interpreter','latex','fontsize',15)
 text(10, 4.5, 'D.)','FontSize',15,'FontWeight','bold')
